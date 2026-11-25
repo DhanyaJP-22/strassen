@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>index</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef0f2;--sf:#fff;--tx:#1b2128;--mu:#5d6773;--bd:#d5dade;--ac:#0f6fc6;--cut:#d4380d;--ok:#1a8a4a;--lane:#f0a500}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101418;--sf:#191f26;--tx:#e8edf2;--mu:#9aa7b4;--bd:#2c3640;--ac:#5aaaf0;--cut:#ff7a4d;--ok:#4cd081;--lane:#f5b82e}}
+:root[data-theme="dark"]{--bg:#101418;--sf:#191f26;--tx:#e8edf2;--mu:#9aa7b4;--bd:#2c3640;--ac:#5aaaf0;--cut:#ff7a4d;--ok:#4cd081;--lane:#f5b82e}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.55 Georgia,"Iowan Old Style",serif}
+main{max-width:1020px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.12;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:21px;margin:0 0 10px}h3{font-size:16px;margin:20px 0 8px}
+p.lead{color:var(--mu);max-width:68ch;margin:0 0 14px}
+.dash{height:6px;margin:0 0 24px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--lane) 0 28px,transparent 28px 46px)}
+section{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:20px;margin-bottom:20px}
+label{display:block;font:600 14px system-ui,sans-serif;margin:12px 0 4px}
+textarea,input,select{width:100%;font:15px ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:9px}
+textarea{min-height:200px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>div{flex:1;min-width:130px}
+button{font:600 15px system-ui,sans-serif;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:6px;padding:10px 18px;cursor:pointer}
+:root[data-theme="dark"] button{color:#06192b}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#06192b}}
+button.ghost{background:transparent;color:var(--ac)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--lane);outline-offset:2px}
+button:disabled{opacity:.6;cursor:wait}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.err{color:var(--cut);font:600 14px system-ui,sans-serif;margin-top:10px;min-height:1em}
+.big{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;margin:0 0 6px;font:14px system-ui,sans-serif;color:var(--mu)}
+.big b{font:700 34px Georgia,serif;color:var(--tx);margin-right:6px}
+.tw{overflow-x:auto}table{border-collapse:collapse;font:14px system-ui,sans-serif;width:100%}
+th,td{padding:6px 10px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}td.l,th.l{text-align:left}
+.cutrow td{color:var(--cut);font-weight:700}
+ol.aug{margin:0;padding-left:22px;font:14px system-ui,sans-serif}ol.aug li{margin:3px 0}ol.aug b{color:var(--ok)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;align-items:start}
+svg text{fill:var(--mu);font:11px system-ui,sans-serif}svg .t{fill:var(--tx);font-weight:700;font-size:13px}svg .nm{fill:var(--tx);font-weight:700}
+.lg{font:13px system-ui,sans-serif;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap;margin:4px 0}
+.lg i{display:inline-block;width:14px;height:4px;margin-right:5px;vertical-align:middle;border-radius:2px}
+.note{font-size:14px;color:var(--mu);margin-top:10px}.ok{color:var(--ok);font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.chip{font:14px system-ui,sans-serif;border:1px solid var(--bd);border-radius:14px;padding:3px 10px}
+</style>
+</head>
+<body>
+<main>
+<h1>Maximum flow in a traffic network</h1>
+<p class="lead">Experiment 6: how many vehicles per hour can travel from a source to a destination? Enter the roads and their capacities, then find the busiest bottleneck roads with the Edmonds-Karp algorithm, test what-if changes, and measure speed on grid road networks.</p>
+<div class="dash" aria-hidden="true"></div>
+
+<section>
+<h2>1. Road network</h2>
+<label for="roads">Roads, one per line as “from to capacity” (vehicles per hour; junction names without spaces)</label>
+<textarea id="roads" spellcheck="false">Source Guindy 1800
+Source Saidapet 1500
+Guindy T.Nagar 900
+Guindy Vadapalani 1000
+Saidapet T.Nagar 800
+Saidapet Kodambakkam 700
+T.Nagar Egmore 1200
+Vadapalani Kodambakkam 400
+Vadapalani Egmore 600
+Kodambakkam Central 900
+Egmore Central 1600
+T.Nagar Kodambakkam 300</textarea>
+<div class="row"><div><label for="src">Source junction</label><input id="src" value="Source"></div><div><label for="snk">Destination junction</label><input id="snk" value="Central"></div></div>
+<div class="acts"><button id="run">Compute maximum flow</button><button class="ghost" id="reset">Reset to city example</button></div>
+<div class="err" id="err" role="alert"></div>
+
+<div id="out" hidden>
+ <div class="big"><span><b id="mf"></b>vehicles per hour</span><span id="its"></span><span id="cutcap"></span></div>
+ <div class="two">
+  <div><h3>Augmenting paths found (shortest first)</h3><ol class="aug" id="aug"></ol>
+   <h3>Bottleneck roads (minimum cut)</h3><div class="tw"><table><thead><tr><th class="l">Road</th><th>Capacity</th></tr></thead><tbody id="cut"></tbody></table></div>
+   <p class="note" id="mfmc"></p></div>
+  <div><h3>Network at maximum flow (flow / capacity)</h3><svg id="net" width="100%" role="img" aria-label="Network with flows"></svg>
+   <div class="lg"><span><i style="background:var(--ok)"></i>Carries flow</span><span><i style="background:var(--cut)"></i>Minimum-cut road</span><span><i style="background:var(--bd)"></i>Unused</span></div></div>
+ </div>
+ <h3>Road utilisation</h3>
+ <svg id="util" width="100%" role="img" aria-label="Road utilisation bars"></svg>
+ <div class="lg"><span><i style="background:var(--cut)"></i>Saturated (100%)</span><span><i style="background:var(--ac)"></i>Partly used</span></div>
+</div>
+</section>
+
+<section id="wi" hidden>
+<h2>2. What-if scenarios</h2>
+<p class="lead" style="margin-bottom:6px">Change one road’s capacity (use 0 to close it) and recompute the maximum flow.</p>
+<div class="row">
+ <div><label for="wr">Road</label><select id="wr"></select></div>
+ <div style="max-width:200px"><label for="wc">New capacity</label><input id="wc" type="number" min="0" value="0"></div>
+</div>
+<div class="acts"><button id="addw">Add scenario</button><button class="ghost" id="clrw">Clear scenarios</button></div>
+<div class="err" id="werr" role="alert"></div>
+<div class="tw"><table><thead><tr><th class="l">Scenario</th><th>Throughput</th><th>Change</th></tr></thead><tbody id="wrows"></tbody></table></div>
+<svg id="wchart" width="100%" role="img" aria-label="Throughput by scenario" style="margin-top:12px"></svg>
+<p class="note">Only changes to minimum-cut roads can raise the maximum flow. Widening a road with spare capacity changes nothing.</p>
+</section>
+
+<section>
+<h2>3. Scalability on grid road networks</h2>
+<div class="row"><div><label for="gk">Grid sizes k (k × k junctions, comma separated)</label><input id="gk" value="10, 20, 30"></div><div style="max-width:200px"><label for="gs">Random seed</label><input id="gs" type="number" value="1"></div></div>
+<div class="acts"><button id="bench">Run benchmark</button></div>
+<div class="err" id="berr" role="alert"></div>
+<div id="bout" hidden>
+ <div class="tw"><table><thead><tr><th>Grid</th><th>Junctions</th><th>Roads</th><th>Max flow</th><th>Augmentations</th><th>Time (ms)</th></tr></thead><tbody id="brows"></tbody></table></div>
+ <div class="two" style="margin-top:14px"><div><svg id="b1" viewBox="0 0 440 270" width="100%" role="img" aria-label="Time versus junctions"></svg></div><div><svg id="b2" viewBox="0 0 440 270" width="100%" role="img" aria-label="Augmentations versus junctions"></svg></div></div>
+ <p class="note">Source is the top-left junction and the destination is the bottom-right one. Capacities are random between 200 and 2000. Timings depend on your device.</p>
+</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id),fmt=x=>x.toLocaleString(undefined,{maximumFractionDigits:2});
+const CITY="Source Guindy 1800\nSource Saidapet 1500\nGuindy T.Nagar 900\nGuindy Vadapalani 1000\nSaidapet T.Nagar 800\nSaidapet Kodambakkam 700\nT.Nagar Egmore 1200\nVadapalani Kodambakkam 400\nVadapalani Egmore 600\nKodambakkam Central 900\nEgmore Central 1600\nT.Nagar Kodambakkam 300";
+function Net(n){this.n=n;this.cap=new Float64Array(n*n);this.adj=Array.from({length:n},()=>new Set())}
+Net.prototype.add=function(u,v,c){this.cap[u*this.n+v]+=c;this.adj[u].add(v);this.adj[v].add(u)};
+Net.prototype.clone=function(){const m=new Net(this.n);m.cap=this.cap.slice();m.adj=this.adj;return m};
+Net.prototype.ek=function(s,t,paths){
+ const n=this.n,cap=this.cap,flow=new Float64Array(n*n);let total=0,it=0;
+ for(;;){
+  const par=new Int32Array(n).fill(-1);par[s]=s;const q=[s];let h=0;
+  while(h<q.length&&par[t]===-1){const u=q[h++];for(const v of this.adj[u])if(par[v]===-1&&cap[u*n+v]-flow[u*n+v]>0){par[v]=u;q.push(v)}}
+  if(par[t]===-1)break;
+  let b=Infinity,v=t;while(v!==s){const u=par[v];b=Math.min(b,cap[u*n+v]-flow[u*n+v]);v=u}
+  const path=[t];v=t;while(v!==s){const u=par[v];flow[u*n+v]+=b;flow[v*n+u]-=b;v=u;path.push(u)}
+  total+=b;it++;if(paths)paths.push({p:path.reverse(),b});
+ }
+ return{total,flow,it};
+};
+Net.prototype.minCut=function(s,flow){
+ const n=this.n,seen=new Set([s]),q=[s];
+ while(q.length){const u=q.shift();for(const v of this.adj[u])if(!seen.has(v)&&this.cap[u*n+v]-flow[u*n+v]>0){seen.add(v);q.push(v)}}
+ const cut=[];for(const u of seen)for(const v of this.adj[u])if(!seen.has(v)&&this.cap[u*n+v]>0)cut.push([u,v,this.cap[u*n+v]]);
+ return cut;
+};
+let M=null,base=0,scen=[];
+
+function parse(){
+ const lines=$("roads").value.split("\n").map(s=>s.trim()).filter(Boolean);
+ if(!lines.length)throw"Enter at least one road.";
+ const names=[],idx={},roads=[];
+ const id=x=>{if(!(x in idx)){idx[x]=names.length;names.push(x)}return idx[x]};
+ lines.forEach((ln,i)=>{const p=ln.split(/\s+/);
+  if(p.length!==3||isNaN(p[2])||p[2]==="")throw"Line "+(i+1)+" should look like “Guindy T.Nagar 900”.";
+  const c=+p[2];if(c<0)throw"Line "+(i+1)+": capacity cannot be negative.";
+  if(p[0]===p[1])throw"Line "+(i+1)+": a road must join two different junctions.";
+  roads.push([id(p[0]),id(p[1]),c])});
+ const s=idx[$("src").value.trim()],t=idx[$("snk").value.trim()];
+ if(s===undefined)throw"Source “"+$("src").value.trim()+"” is not a junction in your roads.";
+ if(t===undefined)throw"Destination “"+$("snk").value.trim()+"” is not a junction in your roads.";
+ if(s===t)throw"Source and destination must be different junctions.";
+ const g=new Net(names.length);roads.forEach(([u,v,c])=>g.add(u,v,c));
+ return{g,names,roads,s,t};
+}
+
+function layout(g,s,t,W){
+ const n=g.n,lvl=new Array(n).fill(-1);lvl[s]=0;const q=[s];
+ while(q.length){const u=q.shift();for(const v of g.adj[u])if(lvl[v]<0&&g.cap[u*n+v]>0){lvl[v]=lvl[u]+1;q.push(v)}}
+ let mx=Math.max(0,...lvl);for(let i=0;i<n;i++)if(lvl[i]<0)lvl[i]=mx;
+ if(lvl[t]<mx||lvl.filter((l,i)=>l===mx&&i!==t).length)lvl[t]=++mx;
+ const cols=Array.from({length:mx+1},()=>[]);lvl.forEach((l,i)=>cols[l].push(i));
+ const rows=Math.max(...cols.map(c=>c.length)),H=Math.max(200,rows*74+40),pos=[];
+ cols.forEach((c,l)=>c.forEach((v,k)=>{pos[v]=[40+(W-80)*(mx?l/mx:.5),H*(k+1)/(c.length+1)]}));
+ return{pos,H};
+}
+
+function drawNet(M,res,cutSet){
+ const{g,names,s,t,roads}=M,n=g.n,W=520,{pos,H}=layout(g,s,t,W),R=14;
+ let o='<defs>'+[["g","var(--ok)"],["c","var(--cut)"],["u","var(--bd)"]].map(([k,c])=>'<marker id="m'+k+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="'+c+'"/></marker>').join("")+"</defs>";
+ const pairs=[...new Set(roads.map(r=>r[0]+","+r[1]))].map(x=>x.split(",").map(Number));
+ const has=new Set(pairs.map(p=>p.join(",")));
+ pairs.forEach(([u,v])=>{
+  const f=Math.max(0,res.flow[u*n+v]),c=g.cap[u*n+v],isCut=cutSet.has(u+","+v),k=isCut?"c":f>0?"g":"u",col=isCut?"var(--cut)":f>0?"var(--ok)":"var(--bd)";
+  const[x1,y1]=pos[u],[x2,y2]=pos[v],dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,b=has.has(v+","+u)?18:0;
+  const mx=(x1+x2)/2-uy*b,my=(y1+y2)/2+ux*b;
+  o+='<path d="M'+(x1+ux*R)+" "+(y1+uy*R)+" Q"+mx+" "+my+" "+(x2-ux*(R+3))+" "+(y2-uy*(R+3))+'" fill="none" stroke="'+col+'" stroke-width="'+(1.5+3.5*Math.min(1,f/Math.max(1,res.total)))+'" marker-end="url(#m'+k+')"/>';
+  o+='<text x="'+(.25*x1+.5*mx+.25*x2)+'" y="'+(.25*y1+.5*my+.25*y2-4)+'" text-anchor="middle" style="fill:'+(isCut?"var(--cut)":"var(--mu)")+';font-weight:700;font-size:10px">'+f+"/"+c+"</text>";
+ });
+ pos.forEach(([x,y],i)=>{const w=Math.max(34,names[i].length*6.6+12);o+='<rect x="'+(x-w/2)+'" y="'+(y-R)+'" width="'+w+'" height="'+2*R+'" rx="'+R+'" fill="var(--sf)" stroke="'+(i===s||i===t?"var(--lane)":"var(--ac)")+'" stroke-width="2.5"/><text class="nm" x="'+x+'" y="'+(y+4)+'" text-anchor="middle" style="font-size:10.5px">'+names[i]+"</text>"});
+ $("net").setAttribute("viewBox","0 0 "+W+" "+H);$("net").innerHTML=o;
+}
+
+function drawUtil(M,res){
+ const{g,names,roads}=M,n=g.n,seen=new Set(),rows=[];
+ roads.forEach(([u,v])=>{const k=u+","+v;if(seen.has(k))return;seen.add(k);const c=g.cap[u*n+v],f=Math.max(0,res.flow[u*n+v]);rows.push([names[u]+" → "+names[v],f,c])});
+ const W=700,rh=26,L=210,H=rows.length*rh+10;let o="";
+ rows.forEach(([nm,f,c],i)=>{const y=i*rh+4,p=c>0?f/c:0,w=(W-L-110)*p,sat=c>0&&f===c;
+  o+='<text x="'+(L-8)+'" y="'+(y+14)+'" text-anchor="end">'+nm+'</text><rect x="'+L+'" y="'+y+'" width="'+(W-L-110)+'" height="18" rx="3" fill="var(--bg)" stroke="var(--bd)"/><rect x="'+L+'" y="'+y+'" width="'+w+'" height="18" rx="3" fill="'+(sat?"var(--cut)":"var(--ac)")+'"/><text x="'+(W-L-110+L+8)+'" y="'+(y+14)+'">'+f+"/"+c+" ("+(c>0?(100*p).toFixed(1):"0.0")+"%)</text>"});
+ $("util").setAttribute("viewBox","0 0 "+W+" "+H);$("util").innerHTML=o;
+}
+
+function compute(){
+ const err=$("err");err.textContent="";$("out").hidden=true;$("wi").hidden=true;
+ let m;try{m=parse()}catch(x){err.textContent=x;return}
+ M=m;const{g,names,s,t,roads}=m,n=g.n,paths=[];
+ const res=g.ek(s,t,paths),cut=g.minCut(s,res.flow),cc=cut.reduce((a,c)=>a+c[2],0);
+ base=res.total;scen=[];
+ $("mf").textContent=fmt(res.total);$("its").textContent=res.it+" augmentation"+(res.it===1?"":"s");
+ $("cutcap").textContent="Cut capacity "+fmt(cc);
+ $("aug").innerHTML=paths.length?paths.map(p=>"<li>"+p.p.map(x=>names[x]).join(" → ")+" <b>+"+fmt(p.b)+"</b></li>").join(""):"<li>No path from source to destination.</li>";
+ $("cut").innerHTML=cut.length?cut.map(c=>"<tr class='cutrow'><td class='l'>"+names[c[0]]+" → "+names[c[1]]+"</td><td>"+fmt(c[2])+"</td></tr>").join("")+"<tr><td class='l'><b>Total</b></td><td><b>"+fmt(cc)+"</b></td></tr>":"<tr><td class='l' colspan='2'>No cut roads: source cannot reach the destination.</td></tr>";
+ $("mfmc").innerHTML=cc===res.total?"<span class='ok'>Max-flow min-cut theorem verified:</span> flow "+fmt(res.total)+" = cut capacity "+fmt(cc)+".":"Mismatch between flow and cut capacity.";
+ drawNet(M,res,new Set(cut.map(c=>c[0]+","+c[1])));drawUtil(M,res);
+ const pairs=[...new Set(roads.map(r=>r[0]+","+r[1]))].map(x=>x.split(",").map(Number));
+ $("wr").innerHTML=pairs.map(([u,v])=>"<option value='"+u+","+v+"'>"+names[u]+" → "+names[v]+" (now "+g.cap[u*n+v]+")</option>").join("");
+ $("out").hidden=false;$("wi").hidden=false;
+ const ids=n=>names.indexOf(n);
+ const pre=[["Egmore","Central",0],["Kodambakkam","Central",1500]];
+ if($("roads").value.trim()===CITY&&pre.every(p=>ids(p[0])>=0))pre.forEach(([a,b,c])=>addScen(ids(a),ids(b),c));else renderScen();
+}
+function addScen(u,v,c){
+ const g2=M.g.clone();g2.cap[u*M.g.n+v]=c;const r=g2.ek(M.s,M.t);
+ scen.push({label:(c===0?"Close ":"Set ")+M.names[u]+" → "+M.names[v]+(c===0?"":" to "+fmt(c)),v:r.total});renderScen();
+}
+function renderScen(){
+ $("wrows").innerHTML="<tr><td class='l'>Baseline</td><td>"+fmt(base)+"</td><td>—</td></tr>"+scen.map(x=>{const d=x.v-base,p=base?100*d/base:0;return"<tr><td class='l'>"+x.label+"</td><td>"+fmt(x.v)+"</td><td style='color:"+(d<0?"var(--cut)":d>0?"var(--ok)":"var(--mu)")+"'>"+(d>0?"+":"")+fmt(d)+" ("+(d>0?"+":"")+p.toFixed(1)+"%)</td></tr>"}).join("");
+ const items=[{label:"Baseline",v:base},...scen],mx=Math.max(1,...items.map(i=>i.v)),W=700,rh=30,L=260,H=items.length*rh+8;let o="";
+ items.forEach((it,i)=>{const y=i*rh+4,w=(W-L-80)*it.v/mx,c=i===0?"var(--mu)":it.v<base?"var(--cut)":it.v>base?"var(--ok)":"var(--ac)";
+  o+='<text x="'+(L-8)+'" y="'+(y+16)+'" text-anchor="end">'+it.label+'</text><rect x="'+L+'" y="'+y+'" width="'+Math.max(1,w)+'" height="20" rx="3" fill="'+c+'"/><text x="'+(L+w+8)+'" y="'+(y+15)+'">'+fmt(it.v)+"</text>"});
+ $("wchart").setAttribute("viewBox","0 0 "+W+" "+H);$("wchart").innerHTML=o;
+}
+$("run").onclick=compute;
+$("reset").onclick=()=>{$("roads").value=CITY;$("src").value="Source";$("snk").value="Central";compute()};
+$("addw").onclick=()=>{
+ const e=$("werr");e.textContent="";const c=+$("wc").value;
+ if($("wc").value===""||!(c>=0)){e.textContent="Enter a capacity of 0 or more.";return}
+ if(!$("wr").value){e.textContent="Compute the maximum flow first.";return}
+ const[u,v]=$("wr").value.split(",").map(Number);addScen(u,v,c);
+};
+$("clrw").onclick=()=>{scen=[];renderScen()};
+
+function lineChart(svg,xs,v,o){
+ const W=440,H=270,L=58,R=14,T=32,B=44,hi=Math.max(...v)*1.1||1;
+ const px=i=>xs.length==1?(L+W-R)/2:L+(W-L-R)*i/(xs.length-1),py=y=>T+(H-T-B)*(1-y/hi);
+ let s='<text class="t" x="'+L+'" y="18">'+o.title+"</text>";
+ for(let k=0;k<=4;k++){const y=hi*k/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(y)+'" y2="'+py(y)+'" stroke="var(--bd)"/><text x="'+(L-6)+'" y="'+(py(y)+4)+'" text-anchor="end">'+(y>=100?Math.round(y):+y.toPrecision(2))+"</text>"}
+ xs.forEach((x,i)=>{s+='<text x="'+px(i)+'" y="'+(H-B+16)+'" text-anchor="middle">'+x+"</text>"});
+ s+='<text x="'+(W/2+L/2)+'" y="'+(H-8)+'" text-anchor="middle">Junctions (k × k grid)</text><text transform="translate(14,'+(H/2)+') rotate(-90)" text-anchor="middle">'+o.y+"</text>";
+ s+='<polyline fill="none" stroke="'+o.c+'" stroke-width="2.5" points="'+v.map((y,i)=>px(i)+","+py(y)).join(" ")+'"/>'+v.map((y,i)=>'<circle cx="'+px(i)+'" cy="'+py(y)+'" r="4" fill="'+o.c+'"><title>'+xs[i]+": "+fmt(y)+"</title></circle>").join("");
+ svg.innerHTML=s;
+}
+function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+$("bench").onclick=async()=>{
+ const err=$("berr");err.textContent="";const btn=$("bench");
+ const Ks=$("gk").value.split(/[\s,;]+/).filter(Boolean).map(Number);
+ if(!Ks.length||Ks.some(k=>!Number.isInteger(k)||k<2||k>40)){err.textContent="Grid sizes must be whole numbers from 2 to 40.";return}
+ const seed=+$("gs").value||1;Ks.sort((a,b)=>a-b);btn.disabled=true;$("brows").innerHTML="";$("bout").hidden=false;
+ const T=[],A=[],labels=[];
+ for(const k of Ks){
+  btn.textContent="Running "+k+"×"+k+" …";await new Promise(r=>setTimeout(r,30));
+  const r=rng(seed*1000+k),g=new Net(k*k);let roads=0;
+  for(let i=0;i<k;i++)for(let j=0;j<k;j++){const u=i*k+j;
+   if(j+1<k){g.add(u,u+1,200+Math.floor(r()*1801));roads++}
+   if(i+1<k){g.add(u,u+k,200+Math.floor(r()*1801));roads++}}
+  const t0=performance.now(),res=g.ek(0,k*k-1),dt=performance.now()-t0;
+  T.push(dt);A.push(res.it);labels.push(k*k);
+  $("brows").insertAdjacentHTML("beforeend","<tr><td>"+k+" × "+k+"</td><td>"+k*k+"</td><td>"+roads+"</td><td>"+fmt(res.total)+"</td><td>"+res.it+"</td><td>"+fmt(dt)+"</td></tr>");
+ }
+ lineChart($("b1"),labels,T,{title:"Computation time",y:"Time (ms)",c:"var(--ac)"});
+ lineChart($("b2"),labels,A,{title:"Augmenting paths needed",y:"Augmentations",c:"var(--lane)"});
+ btn.disabled=false;btn.textContent="Run benchmark";
+};
+compute();
+</script>
+</body>
+</html>
